@@ -1,0 +1,5 @@
+# external requirements
+pandas==1.4.4
+scikit-learn==1.0.2
+uvicorn[standard]==0.20.0
+fastapi[all]==0.88.0

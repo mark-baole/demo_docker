@@ -30,16 +30,37 @@ bash run_app.sh
 ```
 
 ---
-## Using docker
+## Using docker (locally)
 
 - Build the image:
 
 ```bash
-docker build -t demo_image .
+docker build -t demo_image:v1.0.0 .
 ```
 
 - Run the container:
 
 ```bash
-docker run --name demo_container -it -d -p 8080:8080 demo_image
+docker run --name demo_container -it -d -p 8080:8080 demo_image:v1.0.0
+```
+
+- (Optional) Push the image to docker hub:
+
+```bash
+docker tag demo_image:v1.0.0 [your_docker_id]/demo_image:v1.0.0
+docker push [your_docker_id]/demo_image:v1.0.0
+```
+
+## Using docker (on cloud)
+
+- Pull the image from docker hub:
+
+```bash
+docker pull [your_docker_id]/demo_image:v1.0.0
+```
+
+- Run the container:
+
+```bash
+docker run --name demo_container -it -d -p 8080:8080 [your_docker_id]/demo_image:v1.0.0
 ```

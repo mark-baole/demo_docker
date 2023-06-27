@@ -1,0 +1,20 @@
+{
+    "cluster": "demo-ecs-cluster",
+    "serviceName": "demo-service",
+    "taskDefinition": "sample-fargate",
+    "desiredCount": 1,
+    "launchType": "FARGATE",
+    "networkConfiguration": {
+        "awsvpcConfiguration": {
+            "subnets": [
+                "subnet-d5952fb3",
+                "subnet-1502734c",
+                "subnet-f6da70be"
+            ],
+            "securityGroups": [
+                "sg-0ed45f40"
+            ],
+            "assignPublicIp": "ENABLED"
+        }
+    }
+}

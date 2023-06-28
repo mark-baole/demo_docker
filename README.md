@@ -1,4 +1,4 @@
-# demo_docker
+# Demo_docker
 
 A small repo to show how to dockerize your ML model.
 
@@ -52,6 +52,7 @@ docker tag demo_image:v1.0.0 $DOCKER_ID/demo_image:v1.0.0
 docker push $DOCKER_ID/demo_image:v1.0.0
 ```
 
+---
 ## Using docker (on cloud)
 
 - Set up your docker_id
@@ -71,7 +72,10 @@ docker pull $DOCKER_ID/demo_image:v1.0.0
 docker run --name demo_container -it -d -p 8080:8080 $DOCKER_ID/demo_image:v1.0.0
 ```
 
-## Using docker (AWS)
+---
+## Using AWS (App Runner or FarGate)
+
+### Common steps for both App Runner and FarGate: Push the image to ECR
 
 - Set up your AWS account id:
 
@@ -88,7 +92,7 @@ aws ecr create-repository --repository-name demo-container-aws --region ap-south
 - Tag the image:
 
 ```bash
-docker tag demo_image:v1.0.0 $AWS_ACCOUNT_ID.dkr.ecr.ap-southeast-1.amazonaws.com/demo-aws-repo:v1.0.0
+docker tag demo_image:v1.0.0 $AWS_ACCOUNT_ID.dkr.ecr.ap-southeast-1.amazonaws.com/demo-container-aws:v1.0.0
 ```
 
 - Login to ECR:
@@ -100,8 +104,25 @@ aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS
 - Push the image to ECR:
 
 ```bash
-docker push $AWS_ACCOUNT_ID.dkr.ecr.ap-southeast-1.amazonaws.com/demo-aws-repo:v1.0.0
+docker push $AWS_ACCOUNT_ID.dkr.ecr.ap-southeast-1.amazonaws.com/demo-container-aws:v1.0.0
 ```
+
+### App Runner
+
+- Create an App Runner service:
+
+    - Visit https://ap-southeast-1.console.aws.amazon.com/apprunner/home?region=ap-southeast-1#/welcome, click "Create App Runner service"
+    - Select Container image URI, and enter the URI of the image you pushed to ECR (click Browse images, then select the image and tag)
+    - Create new service role (or select an existing one if you have one)
+    - Click "Next"
+    - Enter a service name, e.g. demo-app-runner-service
+    - Click "Next"
+    - Click "Create & deploy"
+    - Wait for the service to be deployed. The app URL will be shown once the deployment is complete.
+    **- Remember to delete the service after you are done.**
+
+### FarGate
+
 
 - Create an ECS cluster:
 
@@ -123,13 +144,25 @@ aws ecs create-service --cli-input-json file://AWS_config/service.json --region 
 
 (note: you can also create the service from the AWS console. In the service.json file, replace the value of "subnets" with the subnet IDs of your VPC, and replace the value of "securityGroups" with the security group ID of your VPC.)
 
+<!-- - Get ecs instance public IP and store it in a variable:
+
+```bash
+export ECS_PUBLIC_IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=demo-ecs-cluster" --query "Reservations[*].Instances[*].PublicIpAddress" --output text --region ap-southeast-1)
+```
+
 - Access the app:
 
 ```bash
 curl http://[your_ecs_public_ip]:8080
-```
+``` -->
 
 (note: you can find the public IP of your ECS instance from the AWS console. For some reason, I have not been able to access the app from the public IP of the EC2 instance.)
+
+- Get the task id and store it in a variable:
+
+```bash
+export TASK_ID=$(aws ecs list-tasks --cluster demo-ecs-cluster --region ap-southeast-1 --query "taskArns[0]" --output text)
+```
 
 - Clean up:
 

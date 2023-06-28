@@ -47,48 +47,60 @@ docker run --name demo_container -it -d -p 8080:8080 demo_image:v1.0.0
 - (Optional) Push the image to docker hub:
 
 ```bash
-docker tag demo_image:v1.0.0 [your_docker_id]/demo_image:v1.0.0
-docker push [your_docker_id]/demo_image:v1.0.0
+export DOCKER_ID="your_docker_id"
+docker tag demo_image:v1.0.0 $DOCKER_ID/demo_image:v1.0.0
+docker push $DOCKER_ID/demo_image:v1.0.0
 ```
 
 ## Using docker (on cloud)
 
+- Set up your docker_id
+```bash
+export DOCKER_ID="your_docker_id"
+```
+
 - Pull the image from docker hub:
 
 ```bash
-docker pull [your_docker_id]/demo_image:v1.0.0
+docker pull $DOCKER_ID/demo_image:v1.0.0
 ```
 
 - Run the container:
 
 ```bash
-docker run --name demo_container -it -d -p 8080:8080 [your_docker_id]/demo_image:v1.0.0
+docker run --name demo_container -it -d -p 8080:8080 $DOCKER_ID/demo_image:v1.0.0
 ```
 
 ## Using docker (AWS)
 
+- Set up your AWS account id:
+
+```bash
+AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
+```
+
 - Create an ECR repository:
 
 ```bash
-aws ecr create-repository --repository-name demo-aws-repo --region ap-southeast-1
+aws ecr create-repository --repository-name demo-container-aws --region ap-southeast-1
 ```
 
 - Tag the image:
 
 ```bash
-docker tag demo_image:v1.0.0 [your_aws_account_id].dkr.ecr.ap-southeast-1.amazonaws.com/demo-aws-repo:v1.0.0
+docker tag demo_image:v1.0.0 $AWS_ACCOUNT_ID.dkr.ecr.ap-southeast-1.amazonaws.com/demo-aws-repo:v1.0.0
 ```
 
 - Login to ECR:
 
 ```bash
-aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin [your_aws_account_id].dkr.ecr.ap-southeast-1.amazonaws.com
+aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.ap-southeast-1.amazonaws.com
 ```
 
 - Push the image to ECR:
 
 ```bash
-docker push [your_aws_account_id].dkr.ecr.ap-southeast-1.amazonaws.com/demo-aws-repo:v1.0.0
+docker push $AWS_ACCOUNT_ID.dkr.ecr.ap-southeast-1.amazonaws.com/demo-aws-repo:v1.0.0
 ```
 
 - Create an ECS cluster:
@@ -125,6 +137,6 @@ curl http://[your_ecs_public_ip]:8080
 aws ecs update-service --cluster demo-ecs-cluster --service demo-service --desired-count 0 --region ap-southeast-1
 aws ecs delete-service --cluster demo-ecs-cluster --service demo-service --region ap-southeast-1
 aws ecs delete-cluster --cluster demo-ecs-cluster --region ap-southeast-1
-aws ecr batch-delete-image --repository-name demo-aws-repo --image-ids imageTag=v1.0.0 --region ap-southeast-1
-aws ecr delete-repository --repository-name demo-aws-repo --region ap-southeast-1
+aws ecr batch-delete-image --repository-name demo-container-aws --image-ids imageTag=v1.0.0 --region ap-southeast-1
+aws ecr delete-repository --repository-name demo-container-aws --region ap-southeast-1
 ```

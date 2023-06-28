@@ -1,5 +1,5 @@
 {
-    "family": "sample-fargate", 
+    "family": "demo-task", 
     "networkMode": "awsvpc", 
     "containerDefinitions": [
         {

@@ -1,7 +1,7 @@
 {
     "cluster": "demo-ecs-cluster",
     "serviceName": "demo-service",
-    "taskDefinition": "sample-fargate",
+    "taskDefinition": "demo-task",
     "desiredCount": 1,
     "launchType": "FARGATE",
     "networkConfiguration": {

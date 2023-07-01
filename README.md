@@ -139,37 +139,70 @@ aws ecs register-task-definition --cli-input-json file://AWS_config/task_definit
 - Create a service:
 
 ```bash
-aws ecs create-service --cli-input-json file://AWS_config/service.json --region ap-southeast-1
+aws ecs create-service --cli-input-json file://AWS_config/service.json --region ap-southeast-1 --enable-execute-command 
 ```
 
 (note: you can also create the service from the AWS console. In the service.json file, replace the value of "subnets" with the subnet IDs of your VPC, and replace the value of "securityGroups" with the security group ID of your VPC.)
 
-<!-- - Get ecs instance public IP and store it in a variable:
+- Get the public IP of the service:
 
 ```bash
-export ECS_PUBLIC_IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=demo-ecs-cluster" --query "Reservations[*].Instances[*].PublicIpAddress" --output text --region ap-southeast-1)
+export TASK_ID=$(aws ecs list-tasks --cluster demo-ecs-cluster --region ap-southeast-1 --query "taskArns[0]" --output text)
+export ENI_ID=$(aws ecs describe-tasks --cluster demo-ecs-cluster --tasks $TASK_ID --output text --query 'tasks[0].attachments[0].details[?name==`networkInterfaceId`].value')
+export ECS_PUBLIC_IP=$(aws ec2 describe-network-interfaces --network-interface-ids $ENI_ID --region ap-southeast-1 --query 'NetworkInterfaces[0].Association.PublicIp' --output text)
+echo $ECS_PUBLIC_IP
 ```
 
 - Access the app:
 
 ```bash
-curl http://[your_ecs_public_ip]:8080
-``` -->
-
-(note: you can find the public IP of your ECS instance from the AWS console. For some reason, I have not been able to access the app from the public IP of the EC2 instance.)
-
-- Get the task id and store it in a variable:
-
-```bash
-export TASK_ID=$(aws ecs list-tasks --cluster demo-ecs-cluster --region ap-southeast-1 --query "taskArns[0]" --output text)
+curl $ECS_PUBLIC_IP:8080
 ```
+
+> **Debugging for FarGate**
+> 
+> Note: if you get an error, first check the log of the container to see if the container is running properly. If the container is running properly, check the security group of the VPC to see if port 8080 is open.
+>
+> - View the log of the container:
+>
+>```bash
+>aws ecs describe-tasks --cluster demo-ecs-cluster --tasks $TASK_ID --region ap-southeast-1 --query "tasks[0].containers[0].logStreamName" --output text
+>```
+>
+>- Exec into the container:
+>
+>```bash
+>export TASK_ID=$(aws ecs list-tasks --cluster demo-ecs-cluster --region ap-southeast-1 --query "taskArns[0]" --output text)
+>aws ecs execute-command --cluster demo-ecs-cluster --task $TASK_ID --container demo-container-aws --region ap-southeast-1 --command "/bin/bash" --interactive
+>```
 
 - Clean up:
 
 ```bash
+export TASK_ID=$(aws ecs list-tasks --cluster demo-ecs-cluster --region ap-southeast-1 --query "taskArns[0]" --output text)
 aws ecs update-service --cluster demo-ecs-cluster --service demo-service --desired-count 0 --region ap-southeast-1
 aws ecs delete-service --cluster demo-ecs-cluster --service demo-service --region ap-southeast-1
 aws ecs delete-cluster --cluster demo-ecs-cluster --region ap-southeast-1
 aws ecr batch-delete-image --repository-name demo-container-aws --image-ids imageTag=v1.0.0 --region ap-southeast-1
 aws ecr delete-repository --repository-name demo-container-aws --region ap-southeast-1
 ```
+---
+
+## CI/CD with AWS CodePipeline (in progress)
+
+- Create a CodePipeline:
+    - Visit https://ap-southeast-1.console.aws.amazon.com/codesuite/codepipeline/pipelines?region=ap-southeast-1
+    - Click "Create pipeline"
+    - In the "Pipeline settings" section, enter a pipeline name, e.g. demo-pipeline
+    - In the "Service role" section, select "New service role" and enter a role name, e.g. demo-pipeline-role (or select an existing role if you have one)
+    - Click "Next"
+    - In the "Source" section, select "Amazon ECR" as the source provider, and select the ECR repository you created earlier
+    - In the "Image tag" section, enter "latest"
+    - Click "Next"
+    - In the "Build" section, select "Skip build stage" (we will use ECS to build the image)
+    - In the "Deploy" section, select "Amazon ECS (Blue/Green)" as the deploy provider
+    - Select the ECS cluster you created earlier
+    - Select the ECS service you created earlier
+    - Click "Next"
+    - Click "Create pipeline"
+    - 

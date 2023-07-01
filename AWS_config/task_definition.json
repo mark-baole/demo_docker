@@ -3,8 +3,8 @@
     "networkMode": "awsvpc",
     "containerDefinitions": [
         {
-            "name": "demo-container",
-            "image": "884168370825/demo_image:v1.0.0",
+            "name": "demo-container-aws",
+            "image": "884168370825.dkr.ecr.ap-southeast-1.amazonaws.com/demo-container-aws:v1.0.0",
             "portMappings": [
                 {
                     "containerPort": 8080,
@@ -14,7 +14,18 @@
             ],
             "essential": true,
             "memory": 512,
-            "cpu": 256
+            "cpu": 256,
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/demo-task",
+                    "awslogs-region": "ap-southeast-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            },
+            "dockerLabels": {
+                "my-custom-label.enable-execute-command": "true"
+            }
         }
     ],
     "requiresCompatibilities": [

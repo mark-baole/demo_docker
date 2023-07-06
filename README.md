@@ -113,6 +113,7 @@ docker push $AWS_ACCOUNT_ID.dkr.ecr.ap-southeast-1.amazonaws.com/demo-container-
 
     - Visit https://ap-southeast-1.console.aws.amazon.com/apprunner/home?region=ap-southeast-1#/welcome, click "Create App Runner service"
     - Select Container image URI, and enter the URI of the image you pushed to ECR (click Browse images, then select the image and tag)
+    - In Deployment setting, choose Automatic
     - Create new service role (or select an existing one if you have one)
     - Click "Next"
     - Enter a service name, e.g. demo-app-runner-service
